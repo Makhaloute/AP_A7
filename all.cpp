@@ -8,26 +8,22 @@
 using namespace std;
 
 
-/*
- the IFollow is a big class , that has a methods and these methods are defrent
- so each child execute methods diffrently
- */
-
-
-
-
-
-
-
-
-
-
 constexpr int PUBLISHER_FOLLOWED_NOTIF = 270;
 constexpr int PUBLISHER_BUOUGTYOURFILM_NOTIF = 250;
 constexpr int PUBLISHER_RATEDYOURFILM_NOTIF = 260;
 constexpr int PUBLISHER_COMMENTEDYOURFILM_NOTIF = 285;
 constexpr int USER_PUBLISERNEWFILM_NOTIF = 385;
 constexpr int USER_COMMENTREPLY_NOTIF = 485;
+
+
+
+
+
+
+
+
+
+
 
 
 class Notification{
@@ -156,20 +152,31 @@ int INotification::showAllNotifications(int limit){
 
 
 
+
+
+
+
+
+
+constexpr int PUBLISHERCODE = 1;
+constexpr int REGULARUSERCODE = 0;
+
 class User{
 public:
-	bool isThisPublisher();
+
+
+
+	bool isThisPublisher() {return functionalType;}
 	void addMoney(int amount);
-	int showNewNotifications();
-	int showAllNotifications();
+	void showNewNotifications() {notifs->showNewNotifications();}
+	void showAllNotifications() {notifs->showAllNotifications();}
 	bool isHeSomeOneIFollow(int userId);
 	int addFollowr(int follwerId);
 	bool isMoneyEnogh(int price);
-	void subtractBuyingCost(int cost);
+	void subtractBuyingCost(int cost) {moneyStock -= cost;}
 	int addNotification(string nameOfUserWhoYourNotifiedFor,
 	 		int whoYourNotifiedForId, int notificationType, 
-	 			int filmId = 0, string _filmName = 0);//unacceptable as is
-													  //parse in some other functions
+	 			int filmId = 0, string filmName = 0);
 private:
 	INotification* notifs;
 	int moneyStock;
@@ -178,6 +185,51 @@ private:
 	map <string,string> characteristics;
 	vector<int> follwersId;
 };
+
+
+void User::addMoney(int amount){
+	moneyStock += amount;
+	cout << "OK" << endl;
+}
+
+bool User::isHeSomeOneIFollow(int userId){
+	for(int i = 0;i<follwersId.size();i++)
+		if(follwersId[i] == userId)
+			return true;
+	return false;
+}
+
+int User::addFollowr(int follwerId){
+	follwersId.push_back(follwerId);
+	cout << "OK" << endl;
+	return 1;
+}
+
+bool User::isMoneyEnogh(int price){
+	if(moneyStock >= price)
+		return true;
+	return false;
+}
+
+
+
+int User::addNotification(string nameOfUserWhoYourNotifiedFor, int whoYourNotifiedForId, int notificationType, int filmId, string filmName){
+
+	if(notificationType == PUBLISHER_BUOUGTYOURFILM_NOTIF || notificationType == PUBLISHER_COMMENTEDYOURFILM_NOTIF || notificationType == PUBLISHER_RATEDYOURFILM_NOTIF)
+		notifs->addNotificationPublisherSpecific(nameOfUserWhoYourNotifiedFor,whoYourNotifiedForId,notificationType,filmId,filmName);
+	else
+		notifs->addNormalNotification(nameOfUserWhoYourNotifiedFor,whoYourNotifiedForId,notificationType);
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -283,7 +335,7 @@ public:
 	int buyFilm(); // 
 
 private:
-
+	vector <pair<int,int>> systemsDebtToPublishers;
 	Ifilm * films;
 	User* currentUser;
 	vector<User*> users;
