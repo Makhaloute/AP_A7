@@ -20,6 +20,8 @@ using namespace std;
 
 
 
+
+
 constexpr int PUBLISHER_FOLLOWED_NOTIF = 270;
 constexpr int PUBLISHER_BUOUGTYOURFILM_NOTIF = 250;
 constexpr int PUBLISHER_RATEDYOURFILM_NOTIF = 260;
@@ -31,7 +33,8 @@ constexpr int USER_COMMENTREPLY_NOTIF = 485;
 class Notification{
 public:
 	Notification(string nameOfNotifMaker, int _notifMakerId, 
-		int _notificationType, int _filmId = 0, string _filmName = 0);
+		int _notificationType, int _filmId, string _filmName);
+	Notification(string nameOfNotifMaker, int _notifMakerId, int _notificationType);
 
 	void printNotification();
 private:
@@ -42,20 +45,22 @@ private:
 	string filmName;
 };
 
+Notification::Notification(string nameOfNotifMaker, int _notifMakerId, int _notificationType){
+	notifMakerName = nameOfNotifMaker;
+	notifMakerId = _notifMakerId;
+	notificationType = _notificationType;
+	filmId = 0;
+	filmName = "";
+}
+
 Notification::Notification(string nameOfNotifMaker, int _notifMakerId,
-					 int _notificationType, int _filmId = 0, string _filmName = 0){
+					 int _notificationType, int _filmId, string _filmName){
 
 	notifMakerName = nameOfNotifMaker;
 	notifMakerId = _notifMakerId;
 	notificationType = _notificationType;
-	if (_notificationType == PUBLISHER_BUOUGTYOURFILM_NOTIF || _notificationType == PUBLISHER_RATEDYOURFILM_NOTIF || PUBLISHER_COMMENTEDYOURFILM_NOTIF){
-		filmId = _filmId;
-		filmName = _filmName;
-	}
-	else{
-		filmId = 0;
-		filmName = "";
-	}
+	filmId = _filmId;
+	filmName = _filmName;
 }
 
 void Notification::printNotification(){
@@ -72,10 +77,10 @@ void Notification::printNotification(){
 				<< " rate your film " << filmName << " with id " << filmId << endl;
 	if(notificationType == USER_PUBLISERNEWFILM_NOTIF)
 		cout << "Publisher " << notifMakerName << " with id " 
-				<< NotifMakerId << " register new film."<<endl;
+				<< notifMakerId << " register new film."<<endl;
 	if(notificationType == USER_COMMENTREPLY_NOTIF)
 		cout << "Publisher " << notifMakerName << " with id " 
-				<< NotifMakerId << " reply to your comment."<<endl;
+				<< notifMakerId << " reply to your comment."<<endl;
 }
 
 
@@ -87,19 +92,63 @@ void Notification::printNotification(){
 class INotification{
 public:
 	INotification();
-	void addNotification(string nameOfNotifMaker, int NotifMakerId,
-			 int notificationType, int filmId = 0, string _filmName = 0);
+	void addNormalNotification(string nameOfNotifMaker, int NotifMakerId, int notificationType);
+	void addNotificationPublisherSpecific(string nameOfNotifMaker, int NotifMakerId,
+			 int notificationType, int filmId, string filmName);
 	int showNewNotifications();
-	int showAllNotifications();
+	int showAllNotifications(int limit = 0);
 private:
-	vector <Notification*> unreadNotifications;//important note: if you pup then push imedieatly the order would fail
-											   // the way is a for loop (backward) ...  
+	void printNotifications(vector<Notification*> printVector, int limit = 0);
+	void addNotificationsToOthers();
+	vector <Notification*> unReadNotifications;
 	vector <Notification*> readNotifications;
 };
 
 
+void INotification::addNormalNotification(string nameOfNotifMaker, int NotifMakerId, int notificationType){
+	Notification* newNotification = new Notification(nameOfNotifMaker,NotifMakerId,notificationType);
+	unReadNotifications.push_back(newNotification);
+}
 
+void INotification::addNotificationPublisherSpecific(string nameOfNotifMaker, int NotifMakerId,
+			 int notificationType, int filmId, string filmName){
+	Notification* newNotification = new Notification(nameOfNotifMaker,NotifMakerId,notificationType,filmId,filmName);
+	unReadNotifications.push_back(newNotification);
+}
 
+const string OUT_NOTIFICATION_STARTER = "#. Notification Message";
+
+void INotification::printNotifications(vector<Notification*> printVector, int limit){
+	if (limit == 0)
+		limit = printVector.size();
+	cout << OUT_NOTIFICATION_STARTER << endl;
+	for(int i = 0;i < printVector.size();i++){
+		if (printVector.size() - i - 1 < 0)
+			cout << "error is in Inotif -> printnotif" << endl;
+		cout << i+1 << ". ";
+		printVector[printVector.size() - i - 1]->printNotification();
+		if (i+1 == limit)
+			return;
+	}
+} 
+
+void INotification::addNotificationsToOthers(){
+	vector<Notification*> emptyVector;
+	for (int i = 0;i< unReadNotifications.size();i++)
+		readNotifications.push_back(unReadNotifications[i]);
+	unReadNotifications = emptyVector;
+}
+
+int INotification::showNewNotifications(){
+	this->printNotifications(unReadNotifications);
+	this->addNotificationsToOthers();
+	return 1;
+}
+
+int INotification::showAllNotifications(int limit){
+	this->printNotifications(readNotifications,limit);
+	return 1;
+}
 
 
 
@@ -134,6 +183,7 @@ private:
 
 
 
+
 struct Comment{
 	Comment(int _id, string _comment):id(_id),comment(_comment){}
 	void addReply(string reply);
@@ -149,6 +199,9 @@ void Comment::addReply(string reply){
 	else
 		cerr<<"there is an empty reply";
 }
+
+
+
 
 
 
@@ -173,6 +226,12 @@ private:
 	int creatorId;
 };
 
+
+
+
+
+
+
 class Ifilm{
 public:
 	void deleteComment(int filmId, int userId, int commentId );
@@ -189,6 +248,9 @@ public:
 private:
 	vector <Film*> films;
 };
+
+
+
 
 
 
