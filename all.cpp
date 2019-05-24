@@ -166,6 +166,8 @@ class User{
 public:
 	User(map <string,string> _characteristics, int _id, bool publisher);
 	bool isThisPublisher() {return functionalType;}
+	bool isThisMyName(string userName);
+	bool isThisMe(string userName, string passWord);
 	void addMoney(int amount);
 	void showNewNotifications() {notifs->showNewNotifications();}
 	void showAllNotifications() {notifs->showAllNotifications();}
@@ -193,6 +195,34 @@ User::User(map <string,string> _characteristics, int _id, bool publisher){
 	functionalType = publisher;
 }
 
+bool User::isThisMe(string userName, string passWord){
+	if(characteristics.find("username") == characteristics.end())
+		return false;	
+	else{
+		map<string,string> :: iterator it1 = characteristics.find("username");
+		if(it1->second == userName){
+				if(characteristics.find("password") == characteristics.end())
+					return false;	
+				else{
+					map<string,string> :: iterator it2 = characteristics.find("password");
+						if(it2->second == passWord)
+							return true;
+					}
+		}
+	}
+	return false;
+}
+
+bool User::isThisMyName(string userName){
+	if(characteristics.find("username") == characteristics.end())
+		return false;	
+	else{
+		map<string,string> :: iterator it = characteristics.find("username");
+		if(it->second == userName)
+			return true;
+		return false;
+	}
+}
 
 void User::addMoney(int amount){
 	moneyStock += amount;
@@ -320,7 +350,7 @@ public:
 	bool isHeHasTheFilm(int userId);
 	pair<int,float>tellPriceAndRate();
 private:
-	int changeMapOfDetails(string key , string data);
+	int changeThisBlockOfMap(string key , string data);
 	string giveDataInMap(string key);
 	vector <Comment*> comments;
 	map <string,string> details;
@@ -436,7 +466,7 @@ int Film::tellDetail(){
 	return 1;
 }
 
-int Film::changeMapOfDetails(string key , string data){
+int Film::changeThisBlockOfMap(string key , string data){
 	if( details.find(key) == details.end())
 		return 0;	
 	else{
@@ -453,7 +483,7 @@ int Film::changeDetails(int userId, vector< pair<string,string>> newDetails){
 	}
 	for (int i = 0 ;newDetails.size();i++){
 		if (newDetails[i].first == MAPS_NAME || newDetails[i].first == MAPS_YEAR || newDetails[i].first == MAPS_LENGTH || newDetails[i].first == MAPS_DIRECTOR || newDetails[i].first == MAPS_SUMMERY)
-			changeMapOfDetails(newDetails[i].first,newDetails[i].second);
+			changeThisBlockOfMap(newDetails[i].first,newDetails[i].second);
 		else{
 			cout << ERROR_BADREQUEST << endl;
 			return 0;
@@ -643,10 +673,10 @@ void Ifilm::deleteComment(int filmId, int userId, int commentId){
 
 class Imain{
 public:
-	Imain(){films = new Ifilm();}
-	void signup(map <string,string> carectristics , bool userType);
-	int login(map <string,string> claims);
-	int buyFilm(); // 
+	Imain();
+	void signup(string userName, map <string,string> carectristics, bool userType);
+	int login(string userName, string passWord);
+	int buyFilm(); 
 
 private:
 	vector <pair<int,int>> systemsDebtToPublishers;
@@ -655,14 +685,33 @@ private:
 	vector<User*> users;
 };
 
-void Imain::signup(map <string,string> carectristics , bool userType){
+Imain::Imain(){
+	films = new Ifilm();
+}
+
+void Imain::signup(string userName, map <string,string> carectristics, bool userType){
+	for(int i = 0;i < users.size();i++){
+		if(users[i]->isThisMyName(userName)){
+			cout << ERROR_BADREQUEST << endl;
+			return;
+		}
+	}
 	User* newUser = new User(carectristics,users.size() + 1,userType); 
 	users.push_back(newUser);
 	currentUser = newUser;
+	cout << DONE_MAEESAGE << endl;
 }
 
-int Imain::login(map <string,string> claims){
-	
+int Imain::login(string userName, string passWord){
+	for(int i = 0 ;i < users.size();i++){
+		if(users[i]->isThisMe(userName,passWord)){
+			currentUser = users[i];
+			cout << DONE_MAEESAGE << endl;
+			return 1;
+		}
+	}
+	cout << ERROR_NOTFOUND << endl;
+	return 0;
 }
 	
 
@@ -678,6 +727,19 @@ int Imain::login(map <string,string> claims){
 
 
 
+void handleCase(vector <string> commands, Imain * imain){
 
+}
+vector <string> parseInput(string line){
+	vector <string> result;
 
-int main (){;}
+	return result;
+}
+int main (){
+	string line;
+	Imain* imain;
+	while(getline(cin,line)){
+		vector<string> commands = parseInput(line); 
+		handleCase(commands,imain);
+	}
+}
