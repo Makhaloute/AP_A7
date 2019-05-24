@@ -15,7 +15,9 @@ constexpr int PUBLISHER_COMMENTEDYOURFILM_NOTIF = 285;
 constexpr int USER_PUBLISERNEWFILM_NOTIF = 385;
 constexpr int USER_COMMENTREPLY_NOTIF = 485;
 
-
+const string DONE_MAEESAGE = "OK";
+const string ERROR_PERMISION = "Permission Denied";
+const string ERROR_BADREQUEST = "Bad Request";
 
 
 
@@ -189,7 +191,7 @@ private:
 
 void User::addMoney(int amount){
 	moneyStock += amount;
-	cout << "OK" << endl;
+	cout << DONE_MAEESAGE << endl;
 }
 
 bool User::isHeSomeOneIFollow(int userId){
@@ -201,7 +203,7 @@ bool User::isHeSomeOneIFollow(int userId){
 
 int User::addFollowr(int follwerId){
 	follwersId.push_back(follwerId);
-	cout << "OK" << endl;
+	cout << DONE_MAEESAGE << endl;
 	return 1;
 }
 
@@ -233,23 +235,34 @@ int User::addNotification(string nameOfUserWhoYourNotifiedFor, int whoYourNotifi
 
 
 
-
-
+constexpr int ACTIVE = 1;
+constexpr int NONACTIVE = 0;
 
 struct Comment{
-	Comment(int _id, string _comment):id(_id),comment(_comment){}
+	Comment(int _id, string _comment):id(_id),comment(_comment){commentActiveness = ACTIVE;}
 	void addReply(string reply);
-
+	void deleteThis();
 	string comment;
 	vector <string> replyes;
 	bool commentActiveness;
 	int id;
 };
 void Comment::addReply(string reply){
-	if(reply != "")
+	if(reply != ""){
 		replyes.push_back(reply);
+		cout << DONE_MAEESAGE <<endl;
+	}
 	else
 		cerr<<"there is an empty reply";
+}
+
+void Comment::deleteThis(){
+	if(!commentActiveness){
+		cout <<	"Bad Request" <<endl;
+		return;
+	}
+	commentActiveness = NONACTIVE;
+	cout << DONE_MAEESAGE <<endl;
 }
 
 
@@ -257,39 +270,228 @@ void Comment::addReply(string reply){
 
 
 
+const string MAPS_NAME = "name";
+const string MAPS_YEAR = "year";
+const string MAPS_LENGTH = "length";
+const string MAPS_PRICE = "price";
+const string MAPS_DIRECTOR = "director";
+const string SPACEINOUTOFFILMDETAILS = " | ";
+const string FILMDETAILINTRO = "Details of Film ";
+const string MAPS_SUMMERY = "summary";
+const string OUT_DETAIL_ID = "Id = ";
+const string OUT_DETAIL_DIRECTOR = "Director = ";
+const string OUT_DETAIL_LENGTH = "Length = ";
+const string OUT_DETAIL_YEAR = "Year = ";
+const string OUT_DETAIL_SUMMARY = "Summary = ";
+const string OUT_DETAIL_RATE = "Rate = ";
+const string OUT_DETAIL_PRICE = "Price = ";
+
+
 class Film{
 public:
+	Film(int _creatorId, map <string,string> _details, int id);
+	int deleteThisFilm(int userId);
+	bool isFilmDeleted() {return saleStatus;}
 	int deleteThisComment(int commentId);
 	int tellDetail();
-	int changeDetails(int userId, map<string,string> newDetails);
-	int addComment(string comment);
-	int replyToComment(int commentId);
+	int changeDetails(int userId, vector< pair<string,string>> newDetails);
+	int addComment(string _comment);
+	int replyToComment(int commentId , string reply);
 	void addRate(float newRate);
-	float getRate(){return rate;}
-	void addBuyer(int buyerId);
+	float getRate() {return rate;}
+	void addBuyer(int buyerId) {buyersId.push_back(buyerId);}
 	bool isUserTheCreator(int userId);
 	pair<int,float>tellPriceAndRate();
 private:
-	vector <Comment> comments;
+	int changeMapOfDetails(string key , string data);
+	string giveDataInMap(string key);
+	vector <Comment*> comments;
 	map <string,string> details;
+	int filmId;
+	int price;
 	vector<int> buyersId;
 	bool saleStatus;
 	float rate;
+	int numberOfRates;
 	int creatorId;
 };
 
 
+int Film::deleteThisFilm(int userId){
+	if(!isUserTheCreator(userId)){
+		cout << ERROR_PERMISION << endl;
+		return 0;
+	}
+	saleStatus = NONACTIVE;
+	return 1;
+}
+
+Film::Film(int _creatorId, map <string,string> _details , int id){
+	creatorId = _creatorId;
+	details = _details;
+	price = stoi(giveDataInMap(MAPS_PRICE));
+	filmId = id;
+	saleStatus = ACTIVE;
+}
+
+
+pair<int,float> Film::tellPriceAndRate(){
+	pair<int,float> result;
+	result.first = price;
+	result.second = rate;
+	return result;
+}
+
+bool Film::isUserTheCreator(int userId){
+	if(userId == creatorId)
+		return true;
+	return false;
+}
+
+
+int Film::addComment(string _comment){
+	Comment *comment = new Comment(comments.size() + 1,_comment);
+	comments.push_back(comment);
+	return 1;
+}
+
+int Film::replyToComment(int commentId , string reply){
+	if (commentId > comments.size()){
+		cout << ERROR_BADREQUEST << endl;
+		return 0;
+	}
+	comments[commentId - 1]->addReply(reply);
+	return 1;
+}
+
+void Film::addRate(float newRate){
+	if (numberOfRates == 0){
+		rate = newRate;
+		numberOfRates++;
+		return;
+	}
+	float totalSumOfRates = rate * numberOfRates;
+	totalSumOfRates += newRate;
+	numberOfRates++;
+	rate = totalSumOfRates / numberOfRates;
+}
 
 
 
 
+
+
+int Film::deleteThisComment(int commentId){
+	for(int i = 0 ;i< comments.size();i++)
+		if(commentId == comments[i]->id){
+			comments[i]->deleteThis();
+			return 1;
+		}
+	cout <<	ERROR_BADREQUEST <<endl;
+	return 0;
+}
+
+
+
+
+
+string Film::giveDataInMap(string key){
+	if( details.find(key) == details.end())
+		return "";	
+	else{
+		map<string,string> :: iterator it = details.find(key);
+		return it->second;
+	}
+} 
+
+
+
+int Film::tellDetail(){
+	cout << FILMDETAILINTRO << giveDataInMap(MAPS_NAME) << endl;
+	cout << OUT_DETAIL_ID << this->filmId << endl;
+	cout << OUT_DETAIL_DIRECTOR << giveDataInMap(MAPS_DIRECTOR) << endl;
+	cout << OUT_DETAIL_LENGTH << giveDataInMap(MAPS_LENGTH) << endl;
+	cout << OUT_DETAIL_YEAR << giveDataInMap(MAPS_YEAR) << endl;
+	cout << OUT_DETAIL_SUMMARY << giveDataInMap(MAPS_SUMMERY) << endl;
+	cout << OUT_DETAIL_RATE << this->rate << endl;
+	cout << OUT_DETAIL_PRICE << this->price << endl;
+	return 1;
+}
+
+
+
+
+int Film::changeMapOfDetails(string key , string data){
+	if( details.find(key) == details.end())
+		return 0;	
+	else{
+		map<string,string> :: iterator it = details.find(key);
+		it->second = data;
+		return 1;
+	}
+}
+
+
+
+int Film::changeDetails(int userId, vector< pair<string,string>> newDetails){
+	if (creatorId != userId){
+		cout << ERROR_PERMISION <<endl; 
+		return 0;
+	}
+	for (int i = 0 ;newDetails.size();i++){
+		if (newDetails[i].first == MAPS_NAME || newDetails[i].first == MAPS_YEAR || newDetails[i].first == MAPS_LENGTH || newDetails[i].first == MAPS_DIRECTOR || newDetails[i].first == MAPS_SUMMERY)
+			changeMapOfDetails(newDetails[i].first,newDetails[i].second);
+		else{
+			cout << ERROR_BADREQUEST << endl;
+			return 0;
+		}
+	}
+	cout << DONE_MAEESAGE << endl;
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void f(){	;// not exacly this
+	//dummy function
+	//cout << this->filmId << SPACEINOUTOFFILMDETAILS;
+	//cout << giveDataInMap(MAPS_NAME) << SPACEINOUTOFFILMDETAILS;
+	//cout << giveDataInMap(MAPS_LENGTH) << SPACEINOUTOFFILMDETAILS;
+	//cout << giveDataInMap(MAPS_PRICE) << SPACEINOUTOFFILMDETAILS;
+	//cout << this->rate << SPACEINOUTOFFILMDETAILS;
+	//cout << giveDataInMap(MAPS_YEAR) << SPACEINOUTOFFILMDETAILS;
+	//cout << giveDataInMap(MAPS_DIRECTOR);
+}
 
 class Ifilm{
+//constexpr string TITLEOFFILMSHOW = "#. Film Id | Film Name | Film Length | Film price | Rate | Production Year | Film Director";
+
 public:
+	int addFilm(int creatorId, map <string,string> details);
 	void deleteComment(int filmId, int userId, int commentId );
 	void tellFilmDetail(int filmId);
-	int changeFilmDetails(int filmId, int userId, map <string,string> newDetails);
-	int addFilm(User * user, map <string,string> details);
+	int changeFilmDetails(int filmId, int userId, vector< pair<string,string>> newDetails);
+
 	int addCommentToFilm (int userId, int filmId, string comment);
 	int replyToComment(int userId, int filmId, int commentId, string reply);
 	void showMyBoughtFilms(int userId);
