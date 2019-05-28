@@ -3,7 +3,7 @@
 #include <vector>
 #include <map>
 #include <iterator>
-
+#include <algorithm>
 
 using namespace std;
 
@@ -348,8 +348,9 @@ public:
 	void addBuyer(int buyerId) {buyersId.push_back(buyerId);}
 	bool isUserTheCreator(int userId);
 	bool isHeHasTheFilm(int userId);
-//	vector<int> giveBuyersIds(){return buyersId;}
+	void tellBrifDetail();
 	pair<int,float>tellPriceAndRate();
+
 private:
 	int changeThisBlockOfMap(string key , string data);
 	string giveDataInMap(string key);
@@ -363,6 +364,17 @@ private:
 	int numberOfRates;
 	int creatorId;
 };
+
+
+void Film::tellBrifDetail(){
+	cout << this->filmId << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_NAME) << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_LENGTH) << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_PRICE) << SPACEINOUTOFFILMDETAILS;
+	cout << this->rate << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_YEAR) << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_DIRECTOR);
+}
 
 bool Film::isHeHasTheFilm(int userId){
 	for(int i = 0;i < buyersId.size();i++)
@@ -513,22 +525,17 @@ int Film::changeDetails(int userId, vector< pair<string,string>> newDetails){
 
 
 
+//#. Film Id | Film Name | Film Length | Film price | Rate | Production Year | Film Director
 
+
+//1. 
+
+//1 | film1 | 120 | 10000 | 0 | 1999 | director_of_film1
 
 //constexpr string TITLEOFFILMSHOW = "#. Film Id | Film Name | Film Length | Film price | Rate | Production Year | Film Director";
 
-void f(){	;// not exacly this
-	//dummy function
-	//cout << this->filmId << SPACEINOUTOFFILMDETAILS;
-	//cout << giveDataInMap(MAPS_NAME) << SPACEINOUTOFFILMDETAILS;
-	//cout << giveDataInMap(MAPS_LENGTH) << SPACEINOUTOFFILMDETAILS;
-	//cout << giveDataInMap(MAPS_PRICE) << SPACEINOUTOFFILMDETAILS;
-	//cout << this->rate << SPACEINOUTOFFILMDETAILS;
-	//cout << giveDataInMap(MAPS_YEAR) << SPACEINOUTOFFILMDETAILS;
-	//cout << giveDataInMap(MAPS_DIRECTOR);
-}
 
-
+ //this->films[recomFilms[i]]->tellBrifDetail();
 
 
 class Ifilm{
@@ -548,12 +555,51 @@ public:
 	void showFilmsIAdded(int userId);
 	void deleteThisFilm(int filmId, int userId);
 private:
+	vector<int> tellMostSutableFilmRecomendationFor(int filmId);
+	vector<int> listScores(vector<int> scores);
 	void addNewFilmToGraph();
 	vector <Film*> films;
 	vector<vector<int>> filmsGraph;
 };
 
-void deleteThisFilm(int filmId, int userId){
+
+
+
+vector<int> Ifilm::listScores(vector<int> scores){
+	vector <int> result;
+	vector<int> scoresCopy = scores;
+	sort(scores.begin(),scores.end(),greater<int>());
+	for(int i = 0 ;i < scores.size();i++){
+		for(int j = 0;j < scoresCopy.size();j++){
+			if(scores[i] == scoresCopy[j]){
+				result.push_back(j);
+				continue;
+			}
+		}
+	}
+	return result;
+}
+
+vector<int> Ifilm::tellMostSutableFilmRecomendationFor(int filmId){
+	vector<int> scores = filmsGraph[filmId - 1];
+	return listScores(scores);
+}
+
+void Ifilm::printRecomendedFilms(int filmId){
+	vector<int> recomFilms = tellMostSutableFilmRecomendationFor(filmId);
+	for(int i = 0;(i < recomFilms.size() && i < 4);i++){ 
+		this->films[recomFilms[i]]->tellBrifDetail();
+	}
+}
+
+
+
+
+
+
+
+
+void Ifilm::deleteThisFilm(int filmId, int userId){
 	if(filmId > films.size()){
 		cout << ERROR_NOTFOUND <<endl;		 
 		return;
@@ -594,7 +640,7 @@ void Ifilm::tellFilmThatItIsBought(int filmId, int buyerId){
 
 int Ifilm::rateThisFilm(int userId, int filmId, float score){
 	if(filmId > films.size()){
-		cout << ERROR_NOTFOUND <<endl;		 
+		cout << ERROR_NOTFOUND << endl;		 
 		return 0;
 	}
 	if (films[filmId - 1]->isHeHasTheFilm(userId)){
@@ -658,7 +704,7 @@ void Ifilm::addNewFilmToGraph(){
 	}
 	vector<int> emptyVector;
 	filmsGraph.push_back(vector<int>());
-	for(int i = 0;i<filmsGraph.size();i++)
+	for(int i = 0;i < filmsGraph.size();i++)
 		filmsGraph[filmsGraph.size() - 1].push_back(0);
 } 
 
@@ -669,11 +715,19 @@ int Ifilm::addFilm(int creatorId, map <string,string> details){
 	return 1;
 }
 
-void Ifilm::printRecomendedFilms(int filmId){
-	;
-}
+
+
+
+
+
+
+
 
 void Ifilm::tellFilmDetail(int filmId){
+	if(filmId > films.size()){
+		cout << ERROR_NOTFOUND <<endl;		 
+		return;
+	}
 	films[filmId - 1]->tellDetail();
 	printRecomendedFilms(filmId);
 }
