@@ -336,7 +336,7 @@ const string OUT_DETAIL_PRICE = "Price = ";
 class Film{
 public:
 	Film(int _creatorId, map <string,string> _details, int id);
-	int deleteThisFilm(int userId);
+	int deleteFilm(int userId);
 	bool isFilmDeleted() {return saleStatus;}
 	int deleteThisComment(int commentId);
 	int tellDetail();
@@ -348,6 +348,7 @@ public:
 	void addBuyer(int buyerId) {buyersId.push_back(buyerId);}
 	bool isUserTheCreator(int userId);
 	bool isHeHasTheFilm(int userId);
+//	vector<int> giveBuyersIds(){return buyersId;}
 	pair<int,float>tellPriceAndRate();
 private:
 	int changeThisBlockOfMap(string key , string data);
@@ -370,7 +371,7 @@ bool Film::isHeHasTheFilm(int userId){
 	return false;	
 }
 
-int Film::deleteThisFilm(int userId){
+int Film::deleteFilm(int userId){
 	if(!isUserTheCreator(userId)){
 		cout << ERROR_PERMISION << endl;
 		return 0;
@@ -539,13 +540,47 @@ public:
 	int addCommentToFilm (int userId, int filmId, string comment);
 	int replyToComment(int userId, int filmId, int commentId, string reply);
 	int rateThisFilm(int userId, int filmId, float score);
+	void buyFilm(int filmId, int buyerId);
 	void tellFilmThatItIsBought(int filmId, int buyerId);
 	void printRecomendedFilms(int filmId);
 	void showMyBoughtFilms(int userId);
+	void updateFilmsGraph(int filmId, int buyerId);
 	void showFilmsIAdded(int userId);
+	void deleteThisFilm(int filmId, int userId);
 private:
+	void addNewFilmToGraph();
 	vector <Film*> films;
+	vector<vector<int>> filmsGraph;
 };
+
+void deleteThisFilm(int filmId, int userId){
+	if(filmId > films.size()){
+		cout << ERROR_NOTFOUND <<endl;		 
+		return;
+	}
+	films[filmId - 1]->deleteFilm(userId);	
+	for(int i = 0;i < films.size();i++){
+		filmsGraph[filmId - 1][i] = -1;
+		filmsGraph[i][filmId -1] = -1;	
+	}
+}
+
+void Ifilm::updateFilmsGraph(int filmId, int buyerId){
+	for(int i = 0;i < films.size();i++){
+		if(films[i]->isHeHasTheFilm(buyerId)){
+			if(filmsGraph[filmId - 1][i] != -1)
+				filmsGraph[filmId - 1][i]++;
+			if(filmsGraph[i][filmId -1] != -1)
+				filmsGraph[i][filmId -1]++;	
+		}	
+	}
+}
+
+void Ifilm::buyFilm(int filmId, int buyerId){
+	tellFilmThatItIsBought(filmId,buyerId);
+	updateFilmsGraph(filmId,buyerId);
+}
+
 
 void Ifilm::tellFilmThatItIsBought(int filmId, int buyerId){
 	if(filmId > films.size()){
@@ -612,10 +647,25 @@ int Ifilm::changeFilmDetails(int filmId, int userId, vector< pair<string,string>
 	return 1;
 }
 
+void Ifilm::addNewFilmToGraph(){
+	if(filmsGraph.size() == 0){
+		filmsGraph[0].push_back(0);
+		return;
+	}
+
+	for(int i = 0 ;i < filmsGraph.size();i++){
+		filmsGraph[i].push_back(0);
+	}
+	vector<int> emptyVector;
+	filmsGraph.push_back(vector<int>());
+	for(int i = 0;i<filmsGraph.size();i++)
+		filmsGraph[filmsGraph.size() - 1].push_back(0);
+} 
 
 int Ifilm::addFilm(int creatorId, map <string,string> details){
 	Film* newFilm = new Film(creatorId,details,films.size() + 1);
 	films.push_back(newFilm);
+	addNewFilmToGraph();
 	return 1;
 }
 
@@ -736,10 +786,10 @@ vector <string> parseInput(string line){
 	return result;
 }
 int main (){
-	string line;
-	Imain* imain;
-	while(getline(cin,line)){
-		vector<string> commands = parseInput(line); 
-		handleCase(commands,imain);
-	}
+//	string line;
+//	Imain* imain;
+//	while(getline(cin,line)){
+//		vector<string> commands = parseInput(line); 
+//		handleCase(commands,imain);
+//	}
 }
