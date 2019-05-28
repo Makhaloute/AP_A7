@@ -331,6 +331,16 @@ const string OUT_DETAIL_YEAR = "Year = ";
 const string OUT_DETAIL_SUMMARY = "Summary = ";
 const string OUT_DETAIL_RATE = "Rate = ";
 const string OUT_DETAIL_PRICE = "Price = ";
+const string OUT_COMMENT = "Comments";
+const string RECOM_OUT_START = "#.";
+const string RECOM_OUT_FID = " Film Id |";
+const string RECOM_OUT_FNAME = " Film Name |";
+const string RECOM_OUT_FLENGTH = " Film Length |";
+const string RECOM_OUT_FPRICE = " Film price |";
+const string RECOM_OUT_FRATE = " Rate |";
+const string RECOM_OUT_FYEAR = " Production Year |";
+const string RECOM_OUT_FDIRECTOR = " Film Director";
+const string OUT_RECOM = "Recommendation Film \n";
 
 
 class Film{
@@ -349,6 +359,7 @@ public:
 	bool isUserTheCreator(int userId);
 	bool isHeHasTheFilm(int userId);
 	void tellBrifDetail();
+	void tellVeryBrifDetail();
 	pair<int,float>tellPriceAndRate();
 
 private:
@@ -365,6 +376,14 @@ private:
 	int creatorId;
 };
 
+
+
+void Film::tellVeryBrifDetail(){
+	cout << this->filmId << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_NAME) << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_LENGTH) << SPACEINOUTOFFILMDETAILS;
+	cout << giveDataInMap(MAPS_DIRECTOR);
+}
 
 void Film::tellBrifDetail(){
 	cout << this->filmId << SPACEINOUTOFFILMDETAILS;
@@ -460,8 +479,6 @@ string Film::giveDataInMap(string key){
 	}
 } 
 
-const string OUT_COMMENT = "Comments";
-
 
 int Film::tellDetail(){
 	cout << FILMDETAILINTRO << giveDataInMap(MAPS_NAME) << endl;
@@ -524,20 +541,6 @@ int Film::changeDetails(int userId, vector< pair<string,string>> newDetails){
 
 
 
-
-//#. Film Id | Film Name | Film Length | Film price | Rate | Production Year | Film Director
-
-
-//1. 
-
-//1 | film1 | 120 | 10000 | 0 | 1999 | director_of_film1
-
-//constexpr string TITLEOFFILMSHOW = "#. Film Id | Film Name | Film Length | Film price | Rate | Production Year | Film Director";
-
-
- //this->films[recomFilms[i]]->tellBrifDetail();
-
-
 class Ifilm{
 public:
 	int addFilm(int creatorId, map <string,string> details);
@@ -545,59 +548,64 @@ public:
 	void tellFilmDetail(int filmId);
 	int changeFilmDetails(int filmId, int userId, vector< pair<string,string>> newDetails);
 	int addCommentToFilm (int userId, int filmId, string comment);
-	int replyToComment(int userId, int filmId, int commentId, string reply);
+	int replyToThisComment(int userId, int filmId, int commentId, string reply);
 	int rateThisFilm(int userId, int filmId, float score);
 	void buyFilm(int filmId, int buyerId);
 	void tellFilmThatItIsBought(int filmId, int buyerId);
 	void printRecomendedFilms(int filmId);
-	void showMyBoughtFilms(int userId);
 	void updateFilmsGraph(int filmId, int buyerId);
+	void deleteThisFilm(int filmId, int userId);	
+	void showMyBoughtFilms(int userId);
 	void showFilmsIAdded(int userId);
-	void deleteThisFilm(int filmId, int userId);
 private:
-	vector<int> tellMostSutableFilmRecomendationFor(int filmId);
+	vector<int> tellMostSutableFilmRecomendationForFilm(int filmId);
 	vector<int> listScores(vector<int> scores);
 	void addNewFilmToGraph();
+	void adaptFilmGraph();
 	vector <Film*> films;
 	vector<vector<int>> filmsGraph;
 };
 
+void Ifilm::printRecomendedFilms(int filmId){
+	vector<int> recomFilms = tellMostSutableFilmRecomendationForFilm(filmId);
+	adaptFilmGraph();
+	cout << OUT_RECOM;
+	cout << RECOM_OUT_START << RECOM_OUT_FID << RECOM_OUT_FNAME 
+			<< RECOM_OUT_FLENGTH << RECOM_OUT_FDIRECTOR;
+	for(int i = 0;(i < recomFilms.size() && i < 4);i++){ 
+		cout << i+1 << ". ";
+		this->films[recomFilms[i]]->tellVeryBrifDetail();
+		cout << endl;
+	}
+}
 
+void Ifilm::showMyBoughtFilms(int userId){
+	cout << RECOM_OUT_START << RECOM_OUT_FID << RECOM_OUT_FNAME 
+			<< RECOM_OUT_FLENGTH << RECOM_OUT_FPRICE << RECOM_OUT_FRATE 
+				<< RECOM_OUT_FYEAR << RECOM_OUT_FDIRECTOR;
 
-
-vector<int> Ifilm::listScores(vector<int> scores){
-	vector <int> result;
-	vector<int> scoresCopy = scores;
-	sort(scores.begin(),scores.end(),greater<int>());
-	for(int i = 0 ;i < scores.size();i++){
-		for(int j = 0;j < scoresCopy.size();j++){
-			if(scores[i] == scoresCopy[j]){
-				result.push_back(j);
-				continue;
-			}
+	for(int i = 0;i < films.size();i++){
+		if(films[i]->isHeHasTheFilm(userId)){
+			films[i]->tellBrifDetail();
+			cout << endl;
 		}
 	}
-	return result;
 }
 
-vector<int> Ifilm::tellMostSutableFilmRecomendationFor(int filmId){
-	vector<int> scores = filmsGraph[filmId - 1];
-	return listScores(scores);
+void Ifilm::showFilmsIAdded(int userId){
+	cout << RECOM_OUT_START << RECOM_OUT_FID << RECOM_OUT_FNAME 
+			<< RECOM_OUT_FLENGTH << RECOM_OUT_FPRICE << RECOM_OUT_FRATE 
+				<< RECOM_OUT_FYEAR << RECOM_OUT_FDIRECTOR;
+
+		
+	for(int i = 0;i < films.size();i++){
+			if(films[i]->isUserTheCreator(userId)){
+				films[i]->tellBrifDetail();
+				cout << endl;
+			}
+		}
+
 }
-
-void Ifilm::printRecomendedFilms(int filmId){
-	vector<int> recomFilms = tellMostSutableFilmRecomendationFor(filmId);
-	for(int i = 0;(i < recomFilms.size() && i < 4);i++){ 
-		this->films[recomFilms[i]]->tellBrifDetail();
-	}
-}
-
-
-
-
-
-
-
 
 void Ifilm::deleteThisFilm(int filmId, int userId){
 	if(filmId > films.size()){
@@ -622,11 +630,41 @@ void Ifilm::updateFilmsGraph(int filmId, int buyerId){
 	}
 }
 
+vector<int> Ifilm::listScores(vector<int> scores){
+	vector <int> result;
+	vector<int> scoresCopy = scores;
+	sort(scores.begin(),scores.end(),greater<int>());
+	for(int i = 0 ;i < scores.size();i++){
+		for(int j = 0;j < scoresCopy.size();j++){
+			if(scores[i] == scoresCopy[j]){
+				result.push_back(j);
+				scoresCopy[j] = -150;
+				continue;
+			}
+		}
+	}
+	return result;
+}
+
+vector<int> Ifilm::tellMostSutableFilmRecomendationForFilm(int filmId){
+	vector<int> scores = filmsGraph[filmId - 1];
+	return listScores(scores);
+}
+
+void Ifilm::adaptFilmGraph(){
+	if ( filmsGraph.size() != filmsGraph[filmsGraph.size() - 2].size()){
+		cout <<"error in program = matrix is not 'motegaren :)' " <<endl;
+		return;
+	}
+	for(int i = 0,j = 0;i < filmsGraph.size();i=j=j+1){
+		filmsGraph[i][j] = 0;
+	}
+}
+
 void Ifilm::buyFilm(int filmId, int buyerId){
 	tellFilmThatItIsBought(filmId,buyerId);
 	updateFilmsGraph(filmId,buyerId);
 }
-
 
 void Ifilm::tellFilmThatItIsBought(int filmId, int buyerId){
 	if(filmId > films.size()){
@@ -635,8 +673,6 @@ void Ifilm::tellFilmThatItIsBought(int filmId, int buyerId){
 	}
 	films[filmId - 1]->addBuyer(buyerId);
 }
-
-
 
 int Ifilm::rateThisFilm(int userId, int filmId, float score){
 	if(filmId > films.size()){
@@ -651,10 +687,7 @@ int Ifilm::rateThisFilm(int userId, int filmId, float score){
 	return 0;
 }
 
-
-
-
-int Ifilm::replyToComment(int userId, int filmId, int commentId, string reply){
+int Ifilm::replyToThisComment(int userId, int filmId, int commentId, string reply){
 	if(filmId > films.size()){
 		cout << ERROR_NOTFOUND <<endl;		 
 		return 0;
@@ -666,9 +699,6 @@ int Ifilm::replyToComment(int userId, int filmId, int commentId, string reply){
 	cout << ERROR_PERMISION << endl;
 	return 0;
 }
-
-
-
 
 int Ifilm::addCommentToFilm (int userId, int filmId, string comment){
 	if(filmId > films.size()){
@@ -682,7 +712,6 @@ int Ifilm::addCommentToFilm (int userId, int filmId, string comment){
 	cout << ERROR_PERMISION << endl;
 	return 0;
 }
-
 
 int Ifilm::changeFilmDetails(int filmId, int userId, vector< pair<string,string>> newDetails){
 	if(filmId > films.size()){
@@ -715,14 +744,6 @@ int Ifilm::addFilm(int creatorId, map <string,string> details){
 	return 1;
 }
 
-
-
-
-
-
-
-
-
 void Ifilm::tellFilmDetail(int filmId){
 	if(filmId > films.size()){
 		cout << ERROR_NOTFOUND <<endl;		 
@@ -731,11 +752,6 @@ void Ifilm::tellFilmDetail(int filmId){
 	films[filmId - 1]->tellDetail();
 	printRecomendedFilms(filmId);
 }
-
-
-
-
-
 
 void Ifilm::deleteComment(int filmId, int userId, int commentId){
 	if (filmId > films.size()){
