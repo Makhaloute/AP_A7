@@ -3,7 +3,7 @@
 #include <vector>
 #include <map>
 #include <iterator>
-#include <algorithm>
+//#include <algorithm>
 
 using namespace std;
 
@@ -791,6 +791,10 @@ void Ifilm::deleteComment(int filmId, int userId, int commentId){
 
 
 
+
+
+
+
 class Imain{
 public:
 	Imain();
@@ -847,19 +851,79 @@ int Imain::login(string userName, string passWord){
 
 
 
-void handleCase(vector <string> commands, Imain * imain){
 
-}
-vector <string> parseInput(string line){
-	vector <string> result;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+vector<string> parseCommand(string command){
+	vector<string> result;
+	string singleCommand = "";
+	for(int i = 0;i < command.length();i++){
+		if(command[i] != ' '){
+			singleCommand += command[i];
+		}
+		else{
+			result.push_back(singleCommand);
+			singleCommand = "";
+		}
+	}
 	return result;
 }
-int main (){
-//	string line;
-//	Imain* imain;
-//	while(getline(cin,line)){
-//		vector<string> commands = parseInput(line); 
-//		handleCase(commands,imain);
-//	}
+map<string,string> parseData(string data) {
+	vector<string> datas = parseCommand(data);
+	map<string,string> resultMap;
+	pair<string,string> dummy;
+	for(int i = 0;i < datas.size();i+=2){
+		dummy.first = datas[i];
+		dummy.second = datas[i+1];
+		resultMap.insert(dummy);
+	}
+	return resultMap;
 }
+
+vector <pair<vector<string>,map<string,string>>> handleInput(){
+	vector <pair<vector<string>,map<string,string>>> input;
+	pair<vector<string>,map<string,string>> singlePair;
+	string line;
+	string flagi = "?";
+	while(getline(cin,line)){
+		singlePair.first = parseCommand(line.substr(0,line.find(flagi)));		
+		singlePair.second = parseData(line.substr(line.find(flagi) + flagi.length()));
+		input.push_back(singlePair);
+	}
+	return input;
+}
+
+int main (){
+	
+	Imain* imain;
+	vector <pair<vector<string>,map<string,string>>> input = handleInput();
+
+
+}
+
+
+
+
