@@ -13,16 +13,42 @@ Response *LoginHandler()::callback(Request *req , Imain mainInterface){
 } 
 
 
+Response *signupHandler()::callback(Request *req , Imain mainInterface){
+  int type = 0;
+  if (req->getQueryParam("type") == "publisher"){
+    type = 1;
+  }
+
+
+ std::map<string, string> map = {{"age",req->getQueryParam("age")} }
+
+
+  if(mainInterface->signup(req->getQueryParam("name"), map <string,string> carectristics,Type)){
+
+  }
+
+
+
+  req->getQueryParam("password")
+req->getQueryParam("mail")
+req->getQueryParam("type")
 
 
 
 
-signupHandler()
-addfilmHandler()
-userHomeHandler()
-profileHandler()
-filmDetailHandler()
-logoutHandler()
+  req->getBodyParam("file_name")
+req->getBodyParam("file")
+
+}
+
+
+
+
+Response *addfilmHandler()::callback(Request *req , Imain mainInterface){}
+Response *userHomeHandler()::callback(Request *req , Imain mainInterface){}
+Response *profileHandler()::callback(Request *req , Imain mainInterface){}
+Response *filmDetailHandler()::callback(Request *req , Imain mainInterface){}
+Response *logoutHandler()::callback(Request *req , Imain mainInterface){}
 
 
 
